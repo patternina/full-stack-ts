@@ -1,14 +1,14 @@
-import * as express from "express";
+import * as express from "express"
 
-import { Server } from "http";
+import { Server } from "http"
 
-import Db from "./db";
+import Db from "./db"
 
-import { ApolloServer, ExpressContext, gql } from "apollo-server-express";
-import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
+import { ApolloServer, ExpressContext, gql } from "apollo-server-express"
+import { ApolloServerPluginDrainHttpServer } from "apollo-server-core"
 
 export async function createApolloServer(
-  _db: Db,
+  db: Db,
   app: express.Application,
   httpServer: Server
 ): Promise<ApolloServer<ExpressContext>> {
@@ -34,16 +34,35 @@ export async function createApolloServer(
       avatarUrl: String!
       reason: String!
     }
-  `;
+  `
+
+  const resolvers = {
+    Query: {
+      currentUser: () => {
+        return {
+          id: "123",
+          name: "Rick Sánchez",
+          handle: "ricksanchez",
+          coverUrl: "",
+          avatarUrl: "",
+          createdAt: "",
+          updatedAt: "",
+        }
+      },
+      suggestions: () => [],
+    },
+  }
 
   const server = new ApolloServer({
     typeDefs,
+    resolvers,
+    context: () => ({ db }),
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  });
+  })
 
-  await server.start();
+  await server.start()
 
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app })
 
-  return server;
+  return server
 }
