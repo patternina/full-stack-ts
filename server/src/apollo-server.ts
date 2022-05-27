@@ -4,58 +4,29 @@ import { Server } from "http"
 
 import Db from "./db"
 
-import { ApolloServer, ExpressContext, gql } from "apollo-server-express"
+import { ApolloServer, ExpressContext } from "apollo-server-express"
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core"
+
+import { GraphQLFileLoader } from "@graphql-tools/graphql-file-loader"
+import { loadSchemaSync } from "@graphql-tools/load"
+import { addResolversToSchema } from "@graphql-tools/schema"
+import { GRAPHQL_SCHEMA_PATH } from "./constants"
+import resolvers from "./resolvers"
+
+const SCHEMA = loadSchemaSync(GRAPHQL_SCHEMA_PATH, {
+  loaders: [new GraphQLFileLoader()],
+})
 
 export async function createApolloServer(
   db: Db,
   app: express.Application,
   httpServer: Server
 ): Promise<ApolloServer<ExpressContext>> {
-  const typeDefs = gql`
-    type Query {
-      currentUser: User!
-      suggestions: [Suggestion!]!
-    }
-
-    type User {
-      id: String!
-      name: String!
-      handle: String!
-      coverUrl: String!
-      avatarUrl: String!
-      createdAt: String!
-      updatedAt: String!
-    }
-
-    type Suggestion {
-      name: String!
-      handle: String!
-      avatarUrl: String!
-      reason: String!
-    }
-  `
-
-  const resolvers = {
-    Query: {
-      currentUser: () => {
-        return {
-          id: "123",
-          name: "Rick Sánchez",
-          handle: "ricksanchez",
-          coverUrl: "",
-          avatarUrl: "",
-          createdAt: "",
-          updatedAt: "",
-        }
-      },
-      suggestions: () => [],
-    },
-  }
-
   const server = new ApolloServer({
-    typeDefs,
-    resolvers,
+    schema: addResolversToSchema({
+      schema: SCHEMA,
+      resolvers,
+    }),
     context: () => ({ db }),
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   })
