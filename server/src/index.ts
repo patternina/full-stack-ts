@@ -1,17 +1,17 @@
-import * as express from "express";
+import * as express from "express"
 
-import { createApolloServer } from "./apollo-server";
-import { createServer } from "http";
+import { createApolloServer } from "./apollo-server"
+import { createServer } from "http"
 
-import * as chalk from "chalk";
+import * as chalk from "chalk"
 
-import { watchClientBuild } from "./build-client";
-import { DB_FILE_PATH, PORT, STATIC_ROOT_FOLDER_PATH } from "./constants";
+import { watchClientBuild } from "./build-client"
+import { DB_FILE_PATH, PORT, STATIC_ROOT_FOLDER_PATH } from "./constants"
 
-import Db from "./db";
-import { seedDb } from "./seed";
+import Db from "./db"
+import { seedDb } from "./seed"
 
-const app = express();
+const app = express()
 
 async function main() {
   console.log(
@@ -19,19 +19,19 @@ async function main() {
       chalk.bgBlueBright.white.bold(" Building UI and serving on "),
       chalk.bgWhite.black("\thttp://localhost:1234\t\t"),
     ].join(" ")
-  );
+  )
 
-  watchClientBuild();
+  watchClientBuild()
 
-  const db = new Db(DB_FILE_PATH);
+  const db = new Db(DB_FILE_PATH)
 
-  await db.initDefaults();
-  await seedDb(db);
+  await db.initDefaults()
+  await seedDb(db)
 
-  app.use("/static", express.static(STATIC_ROOT_FOLDER_PATH));
+  app.use("/static", express.static(STATIC_ROOT_FOLDER_PATH))
 
-  const httpServer = createServer(app);
-  const apolloServer = await createApolloServer(db, app, httpServer);
+  const httpServer = createServer(app)
+  const apolloServer = await createApolloServer(db, app, httpServer)
 
   await new Promise<void>((resolve) =>
     app.listen(PORT, () => {
@@ -42,13 +42,13 @@ async function main() {
             `\thttp://localhost:${PORT}${apolloServer.graphqlPath}\t`
           ),
         ].join(" ")
-      );
+      )
 
-      resolve();
+      resolve()
     })
-  );
+  )
 }
 
 main().catch((err) => {
-  console.error(err);
-});
+  console.error(err)
+})
